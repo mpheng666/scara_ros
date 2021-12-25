@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>scara</name>
+  <version>0.0.0</version>
+  <description>Scara package contains high level planner, simulation, hw interface for a RRPP SCARA</description>
+
+  <maintainer email="mpheng96@gmail.com">mpheng</maintainer>
+
+  <license>BSD</license>
+
+  <author email="mpheng96@gmail.com">mpheng</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <exec_depend>scara_planner</exec_depend>
+  <!-- <exec_depend>scara_moveit</exec_depend>
+  <exec_depend>scara_hw_interface</exec_depend>
+  <exec_depend>icube_navigation</exec_depend> -->
+
+  <export>
+    <metapackage/>
+  </export>
+</package>
