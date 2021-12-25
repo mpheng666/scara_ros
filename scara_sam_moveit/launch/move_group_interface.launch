@@ -1,0 +1,7 @@
+
+<launch>
+
+  <node name="move_group_interface" pkg="scara_sam_moveit" type="move_group_interface" respawn="false" output="screen">
+  </node>
+
+</launch>

@@ -1,0 +1,11 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: scara_sam_urdf
+    relative_path: urdf/scara_sam.urdf
+    xacro_args: ""
+  SRDF:
+    relative_path: config/scara_sam.srdf
+  CONFIG:
+    author_name: Heng Meng Pei
+    author_email: mpheng96@gmail.com
+    generated_timestamp: 1625244507
