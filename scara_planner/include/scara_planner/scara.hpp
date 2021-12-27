@@ -24,60 +24,61 @@ namespace scara_ns
 {
     class Scara
     {
-        public:
-            Scara(const std::string, const std::string, const std::string);
-            ~Scara();
-            void startProcess();
-        
-        private:
-            ros::NodeHandle *prive_nh_;
-            ros::NodeHandle *relative_nh_;
-            ros::Publisher scara_odom_pub;
-            ros::Subscriber scara_cmd_sub;
-            ros::Subscriber scara_initpose_sub;
+    public:
+        Scara(const std::string, const std::string, const std::string);
+        ~Scara();
+        void startProcess();
 
-            const double LOOP_RATE = 10;
+    private:
+        ros::NodeHandle *prive_nh_;
+        ros::NodeHandle *relative_nh_;
+        ros::Publisher scara_odom_pub;
+        ros::Subscriber scara_cmd_sub;
+        ros::Subscriber scara_initpose_sub;
 
-            // double last_t_;
-            // double freq_, publish_freq_;
+        enum ModeState
+        {
+            CartesainMode,
+            JointMode,
+            TeachMode,
+            RandomMode
+        };
 
-            string base_frame_id;
-            string odom_frame_id;
-            string global_frame_id;
+        ModeState _currState = CartesainMode;
 
-            tf::TransformBroadcaster broadcaster;
+        const double LOOP_RATE = 10;
 
-            // boost::recursive_mutex state_lock_;
-            // boost::recursive_mutex vw_lock_;
-            // string name;
+        // double last_t_;
+        // double freq_, publish_freq_;
 
-            const std_msgs::Float32 DEFAULT_LINK_1;
-            const std_msgs::Float32 DEFAULT_LINK_2;
-            const std_msgs::Float32 DEFAULT_LINK_3;
-            double x, y, th, v, w;
-            double x_gt, y_gt, th_gt;
-            double 1rot_lim_, 2rot_lim_, 3pris_lim_;
-            double 1rot_ , 2rot_ , 3pris_;
+        string base_frame_id;
+        string odom_frame_id;
+        string global_frame_id;
 
-            void loadParam();
-            void emergencyStop();
-            void pauseMove();
-            void kinematicCal();
-            void modeChange();
-            void lineSegmentation();
-            void moveScara();
+        tf::TransformBroadcaster broadcaster;
 
+        // boost::recursive_mutex state_lock_;
+        // boost::recursive_mutex vw_lock_;
+        // string name;
+
+        const std_msgs::Float32 DEFAULT_LINK_1;
+        const std_msgs::Float32 DEFAULT_LINK_2;
+        const std_msgs::Float32 DEFAULT_LINK_3;
+        double x, y, th, v, w;
+        double x_gt, y_gt, th_gt;
+        double 1rot_lim_, 2rot_lim_, 3pris_lim_;
+        double 1rot_, 2rot_, 3pris_;
+
+        void loadParam();
+        void emergencyStop();
+        void pauseMove();
+        void kinematicCal();
+        void modeChange();
+        void lineSegmentation();
+        void moveScara();
+        void zeroScara();
     }
 
 }; //scara_ns
 
 #endif
-
-
-/** MODE:
- * Cartesain control
- * Joint control
- * Teach joystick
- * Teach manual
- * Random dance
- * **/
