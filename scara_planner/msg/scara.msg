@@ -1,0 +1,10 @@
+Header header
+int64 mode
+bool has_reset
+bool has_record
+bool has_playback
+int64 x
+int64 y
+int64 joint_1
+int64 joint_2
+int64 z

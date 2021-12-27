@@ -1,0 +1,29 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "",
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "includePath": [
+        "/home/mpheng/sam_ws/devel/include/**",
+        "/opt/ros/melodic/include/**",
+        "/home/mpheng/sam_ws/src/auxiliary_sensor_icube/include/**",
+        "/home/mpheng/scara_ws/src/scarab/hfn/include/**",
+        "/home/mpheng/sam_ws/src/ks114_sonar/include/**",
+        "/home/mpheng/scara_ws/src/scarab/laser_simulator/include/**",
+        "/home/mpheng/sam_ws/src/leds_indicator/include/**",
+        "/home/mpheng/scara_ws/src/scarab/mesh80211s/include/**",
+        "/home/mpheng/scara_ws/src/scara/scara_demo/src/rosserial/rosserial_server/include/**",
+        "/home/mpheng/scara_ws/src/scara/scara_demo/src/rosserial/rosserial_test/include/**",
+        "/home/mpheng/scara_ws/src/scara/scara_planner/include/**",
+        "/home/mpheng/scara_ws/src/scara/scara_sam_moveit/include/**",
+        "/home/mpheng/scara_ws/src/scara/scara_demo/src/teleop_twist_joy/include/**",
+        "/home/mpheng/training_ws/src/velodyne_simulator/velodyne_gazebo_plugins/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS"
+    }
+  ],
+  "version": 4
+}
