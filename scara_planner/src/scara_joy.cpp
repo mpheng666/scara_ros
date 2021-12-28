@@ -1,135 +1,103 @@
-/**
-Software License Agreement (BSD)
-
-\authors   Mike Purvis <mpurvis@clearpathrobotics.com>
-\copyright Copyright (c) 2014, Clearpath Robotics, Inc., All rights reserved.
-
-Redistribution and use in source and binary forms, with or without modification, are permitted provided that
-the following conditions are met:
- * Redistributions of source code must retain the above copyright notice, this list of conditions and the
-   following disclaimer.
- * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
-   following disclaimer in the documentation and/or other materials provided with the distribution.
- * Neither the name of Clearpath Robotics nor the names of its contributors may be used to endorse or promote
-   products derived from this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WAR-
-RANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, IN-
-DIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT
-OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-
-#include "geometry_msgs/Twist.h"
 #include "ros/ros.h"
 #include "sensor_msgs/Joy.h"
-#include "teleop_twist_joy/teleop_twist_joy.h"
+#include "scara_joy.hpp"
+#include "scara_planner/scara.h"
 
 #include <map>
 #include <string>
 
 
-namespace teleop_twist_joy
+namespace scara_joy
 {
-
-/**
- * Internal members of class. This is the pimpl idiom, and allows more flexibility in adding
- * parameters later without breaking ABI compatibility, for robots which link TeleopTwistJoy
- * directly into base nodes.
- */
-struct TeleopTwistJoy::Impl
+struct ScaraJoy::Impl
 {
   void joyCallback(const sensor_msgs::Joy::ConstPtr& joy);
-  void sendCmdVelMsg(const sensor_msgs::Joy::ConstPtr& joy_msg, const std::string& which_map);
+  void sendCmdMsg(const sensor_msgs::Joy::ConstPtr& joy_msg, const std::string& which_map);
 
   ros::Subscriber joy_sub;
-  ros::Publisher cmd_vel_pub;
+  ros::Publisher cmd_pub;
 
-  int enable_button;
-  int enable_turbo_button;
   int reset_button; // x
   int record_button; // y
   int playback_button; // B
-  int pause_button; // A 
+  int enable_button; // A 
 
-  std::map<std::string, int> axis_linear_map;
-  std::map< std::string, std::map<std::string, double> > scale_linear_map;
+  std::map<std::string, int> axis_x_cartesian_map;
+  std::map< std::string, std::map<std::string, double> > scale_x_cartesian_map;
+  std::map<std::string, int> axis_y_cartesian_map;
+  std::map< std::string, std::map<std::string, double> > scale_y_cartesian_map;
 
-  std::map<std::string, int> axis_angular_map;
-  std::map< std::string, std::map<std::string, double> > scale_angular_map;
+  std::map<std::string, int> axis_1_joint_map;
+  std::map< std::string, std::map<std::string, double> > scale_1_joint_map;
+  std::map<std::string, int> axis_2_joint_map;
+  std::map< std::string, std::map<std::string, double> > scale_2_joint_map;
 
   bool sent_disable_msg;
 };
 
 /**
- * Constructs TeleopTwistJoy.
+ * Constructs ScaraJoy.
  * \param nh NodeHandle to use for setting up the publisher and subscriber.
  * \param nh_param NodeHandle to use for searching for configuration parameters.
  */
-TeleopTwistJoy::TeleopTwistJoy(ros::NodeHandle* nh, ros::NodeHandle* nh_param)
+ScaraJoy::ScaraJoy(ros::NodeHandle* nh, ros::NodeHandle* nh_param)
 {
   pimpl_ = new Impl;
 
-  pimpl_->cmd_vel_pub = nh->advertise<geometry_msgs::Twist>("cmd_vel", 1, true);
-  pimpl_->joy_sub = nh->subscribe<sensor_msgs::Joy>("joy", 1, &TeleopTwistJoy::Impl::joyCallback, pimpl_);
+  pimpl_->cmd_pub = nh->advertise<scara_planner::scara>("scara_cmd", 1, true);
+  pimpl_->joy_sub = nh->subscribe<sensor_msgs::Joy>("joy", 1, &ScaraJoy::Impl::joyCallback, pimpl_);
 
+  nh_param->param<int>("reset_button", pimpl_->reset_button, 2);
+  nh_param->param<int>("record_button", pimpl_->record_button, 3);
+  nh_param->param<int>("playback_button", pimpl_->playback_button, 1);
   nh_param->param<int>("enable_button", pimpl_->enable_button, 0);
-  nh_param->param<int>("enable_turbo_button", pimpl_->enable_turbo_button, -1);
+  nh_param->param<int>("axis_x_cartesian", pimpl_->axis_x_cartesian_map["x"], 0);
+  nh_param->param<double>("scale_x_cartesian", pimpl_->scale_x_cartesian_map["normal"]["x"], 1.0);
+  nh_param->param<int>("axis_y_cartesian", pimpl_->axis_y_cartesian_map["y"], 1);
+  nh_param->param<double>("scale_y_cartesian", pimpl_->scale_y_cartesian_map["normal"]["y"], 1.0);
+  nh_param->param<int>("axis_1_joint", pimpl_->axis_1_joint_map["joint_1"], 3);
+  nh_param->param<double>("scale_1_joint", pimpl_->scale_1_joint_map["normal"]["joint_1"], 0.5);
+  nh_param->param<int>("axis_2_joint", pimpl_->axis_2_joint_map["joint_2"], 4);
+  nh_param->param<double>("scale_2_joint", pimpl_->scale_2_joint_map["normal"]["joint_2"], 0.5);
 
-  if (nh_param->getParam("axis_linear", pimpl_->axis_linear_map))
-  {
-    nh_param->getParam("scale_linear", pimpl_->scale_linear_map["normal"]);
-    nh_param->getParam("scale_linear_turbo", pimpl_->scale_linear_map["turbo"]);
-  }
-  else
-  {
-    nh_param->param<int>("axis_linear", pimpl_->axis_linear_map["x"], 1);
-    nh_param->param<double>("scale_linear", pimpl_->scale_linear_map["normal"]["x"], 0.5);
-    nh_param->param<double>("scale_linear_turbo", pimpl_->scale_linear_map["turbo"]["x"], 1.0);
-  }
+  ROS_INFO_NAMED("ScaraJoy", "Teleop reset button %i.", pimpl_->reset_button);
+  ROS_INFO_NAMED("ScaraJoy", "Teleop record button %i.", pimpl_->record_button);
+  ROS_INFO_NAMED("ScaraJoy", "Teleop playback button %i.", pimpl_->playback_button);
+  ROS_INFO_NAMED("ScaraJoy", "Teleop enable button %i.", pimpl_->enable_button);
 
-  if (nh_param->getParam("axis_angular", pimpl_->axis_angular_map))
+  for (std::map<std::string, int>::iterator it = pimpl_->axis_x_cartesian_map.begin();
+      it != pimpl_->axis_x_cartesian_map.end(); ++it)
   {
-    nh_param->getParam("scale_angular", pimpl_->scale_angular_map["normal"]);
-    nh_param->getParam("scale_angular_turbo", pimpl_->scale_angular_map["turbo"]);
-  }
-  else
-  {
-    nh_param->param<int>("axis_angular", pimpl_->axis_angular_map["yaw"], 0);
-    nh_param->param<double>("scale_angular", pimpl_->scale_angular_map["normal"]["yaw"], 0.5);
-    nh_param->param<double>("scale_angular_turbo",
-        pimpl_->scale_angular_map["turbo"]["yaw"], pimpl_->scale_angular_map["normal"]["yaw"]);
+    ROS_INFO_NAMED("ScaraJoy", "Cartesian axis %s on %i at scale %f.",
+    it->first.c_str(), it->second, pimpl_->scale_x_cartesian_map["normal"][it->first]);
   }
 
-  ROS_INFO_NAMED("TeleopTwistJoy", "Teleop enable button %i.", pimpl_->enable_button);
-  ROS_INFO_COND_NAMED(pimpl_->enable_turbo_button >= 0, "TeleopTwistJoy",
-      "Turbo on button %i.", pimpl_->enable_turbo_button);
-
-  for (std::map<std::string, int>::iterator it = pimpl_->axis_linear_map.begin();
-      it != pimpl_->axis_linear_map.end(); ++it)
+  for (std::map<std::string, int>::iterator it = pimpl_->axis_y_cartesian_map.begin();
+      it != pimpl_->axis_y_cartesian_map.end(); ++it)
   {
-    ROS_INFO_NAMED("TeleopTwistJoy", "Linear axis %s on %i at scale %f.",
-    it->first.c_str(), it->second, pimpl_->scale_linear_map["normal"][it->first]);
-    ROS_INFO_COND_NAMED(pimpl_->enable_turbo_button >= 0, "TeleopTwistJoy",
-        "Turbo for linear axis %s is scale %f.", it->first.c_str(), pimpl_->scale_linear_map["turbo"][it->first]);
+    ROS_INFO_NAMED("ScaraJoy", "Cartesian axis %s on %i at scale %f.",
+    it->first.c_str(), it->second, pimpl_->scale_y_cartesian_map["normal"][it->first]);
   }
 
-  for (std::map<std::string, int>::iterator it = pimpl_->axis_angular_map.begin();
-      it != pimpl_->axis_angular_map.end(); ++it)
+  for (std::map<std::string, int>::iterator it = pimpl_->axis_1_joint_map.begin();
+      it != pimpl_->axis_1_joint_map.end(); ++it)
   {
-    ROS_INFO_NAMED("TeleopTwistJoy", "Angular axis %s on %i at scale %f.",
-    it->first.c_str(), it->second, pimpl_->scale_angular_map["normal"][it->first]);
-    ROS_INFO_COND_NAMED(pimpl_->enable_turbo_button >= 0, "TeleopTwistJoy",
-        "Turbo for angular axis %s is scale %f.", it->first.c_str(), pimpl_->scale_angular_map["turbo"][it->first]);
+    ROS_INFO_NAMED("ScaraJoy", "Joint axis %s on %i at scale %f.",
+    it->first.c_str(), it->second, pimpl_->scale_1_joint_map["normal"][it->first]);
+  }
+
+  for (std::map<std::string, int>::iterator it = pimpl_->axis_2_joint_map.begin();
+      it != pimpl_->axis_2_joint_map.end(); ++it)
+  {
+    ROS_INFO_NAMED("ScaraJoy", "Joint axis %s on %i at scale %f.",
+    it->first.c_str(), it->second, pimpl_->scale_2_joint_map["normal"][it->first]);
   }
 
   pimpl_->sent_disable_msg = false;
 }
 
 double getVal(const sensor_msgs::Joy::ConstPtr& joy_msg, const std::map<std::string, int>& axis_map,
-              const std::map<std::string, double>& scale_map, const std::string& fieldname)
+          const std::map<std::string, double>& scale_map, const std::string& fieldname)
 {
   if (axis_map.find(fieldname) == axis_map.end() ||
       scale_map.find(fieldname) == scale_map.end() ||
@@ -141,35 +109,31 @@ double getVal(const sensor_msgs::Joy::ConstPtr& joy_msg, const std::map<std::str
   return joy_msg->axes[axis_map.at(fieldname)] * scale_map.at(fieldname);
 }
 
-void TeleopTwistJoy::Impl::sendCmdVelMsg(const sensor_msgs::Joy::ConstPtr& joy_msg,
+void ScaraJoy::Impl::sendCmdMsg(const sensor_msgs::Joy::ConstPtr& joy_msg,
                                          const std::string& which_map)
 {
   // Initializes with zeros by default.
-  geometry_msgs::Twist cmd_vel_msg;
+  scara_planner::scara cmd_msg;
 
-  cmd_vel_msg.linear.x = getVal(joy_msg, axis_linear_map, scale_linear_map[which_map], "x");
-  cmd_vel_msg.linear.y = getVal(joy_msg, axis_linear_map, scale_linear_map[which_map], "y");
-  cmd_vel_msg.linear.z = getVal(joy_msg, axis_linear_map, scale_linear_map[which_map], "z");
-  cmd_vel_msg.angular.z = getVal(joy_msg, axis_angular_map, scale_angular_map[which_map], "yaw");
-  cmd_vel_msg.angular.y = getVal(joy_msg, axis_angular_map, scale_angular_map[which_map], "pitch");
-  cmd_vel_msg.angular.x = getVal(joy_msg, axis_angular_map, scale_angular_map[which_map], "roll");
+  cmd_msg.x = getVal(joy_msg, axis_x_cartesian_map, scale_x_cartesian_map[which_map], "x");
+  cmd_msg.y = getVal(joy_msg, axis_y_cartesian_map, scale_y_cartesian_map[which_map], "y");
+  cmd_msg.joint_1 = getVal(joy_msg, axis_1_joint_map, scale_1_joint_map[which_map], "joint_1");
+  cmd_msg.joint_2 = getVal(joy_msg, axis_2_joint_map, scale_2_joint_map[which_map], "joint_2");
+  cmd_msg.reset = joy_msg->buttons[reset_button];
+  cmd_msg.record = joy_msg->buttons[record_button];
+  cmd_msg.playback = joy_msg->buttons[playback_button];
+  cmd_msg.enable = joy_msg->buttons[enable_button];
 
-  cmd_vel_pub.publish(cmd_vel_msg);
+  cmd_pub.publish(cmd_msg);
   sent_disable_msg = false;
 }
 
-void TeleopTwistJoy::Impl::joyCallback(const sensor_msgs::Joy::ConstPtr& joy_msg)
+void ScaraJoy::Impl::joyCallback(const sensor_msgs::Joy::ConstPtr& joy_msg)
 {
-  if (enable_turbo_button >= 0 &&
-      joy_msg->buttons.size() > enable_turbo_button &&
-      joy_msg->buttons[enable_turbo_button])
-  {
-    sendCmdVelMsg(joy_msg, "turbo");
-  }
-  else if (joy_msg->buttons.size() > enable_button &&
+  if (joy_msg->buttons.size() > enable_button &&
            joy_msg->buttons[enable_button])
   {
-    sendCmdVelMsg(joy_msg, "normal");
+    sendCmdMsg(joy_msg, "normal");
   }
   else
   {
@@ -178,11 +142,11 @@ void TeleopTwistJoy::Impl::joyCallback(const sensor_msgs::Joy::ConstPtr& joy_msg
     if (!sent_disable_msg)
     {
       // Initializes with zeros by default.
-      geometry_msgs::Twist cmd_vel_msg;
-      cmd_vel_pub.publish(cmd_vel_msg);
+      scara_planner::scara cmd_msg;
+      cmd_pub.publish(cmd_msg);
       sent_disable_msg = true;
     }
   }
 }
 
-}  // namespace teleop_twist_joy
+}  // namespace scarajoy

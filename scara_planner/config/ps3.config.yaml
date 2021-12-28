@@ -1,0 +1,14 @@
+axis_x_cartesian: 0
+scale_x_cartesian: 1.0
+axis_y_cartesian: 1
+scale_y_cartesian: 1.0
+
+axis_1_joint: 3
+scale_1_joint: 0.5
+axis_2_joint: 4
+scale_2_joint: 0.5
+
+reset_button: 2
+record_button: 3
+playback_button: 1
+manual_button: 0

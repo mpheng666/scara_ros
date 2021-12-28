@@ -22,7 +22,7 @@ namespace scara_ns
         ;
     }
 
-    void SonarKs114::loadParam()
+    void Scara::loadParam()
     {
         // if (!ros::param::param<int>("/ks114_sonar/num_of_sonar", num_of_sonar_, DEFAULT_NUM))
         // {
