@@ -11,4 +11,6 @@ scale_2_joint: 0.5
 reset_button: 2
 record_button: 3
 playback_button: 1
-manual_button: 0
+enable_button: 0
+
+z_button: 7

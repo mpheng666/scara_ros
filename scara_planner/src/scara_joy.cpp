@@ -21,6 +21,7 @@ struct ScaraJoy::Impl
   int record_button; // y
   int playback_button; // B
   int enable_button; // A 
+  double z_button;
 
   std::map<std::string, int> axis_x_cartesian_map;
   std::map< std::string, std::map<std::string, double> > scale_x_cartesian_map;
@@ -47,6 +48,7 @@ ScaraJoy::ScaraJoy(ros::NodeHandle* nh, ros::NodeHandle* nh_param)
   pimpl_->cmd_pub = nh->advertise<scara_planner::scara>("scara_cmd", 1, true);
   pimpl_->joy_sub = nh->subscribe<sensor_msgs::Joy>("joy", 1, &ScaraJoy::Impl::joyCallback, pimpl_);
 
+  nh_param->param<double>("z_button", pimpl_->z_button, 7);
   nh_param->param<int>("reset_button", pimpl_->reset_button, 2);
   nh_param->param<int>("record_button", pimpl_->record_button, 3);
   nh_param->param<int>("playback_button", pimpl_->playback_button, 1);
@@ -64,6 +66,7 @@ ScaraJoy::ScaraJoy(ros::NodeHandle* nh, ros::NodeHandle* nh_param)
   ROS_INFO_NAMED("ScaraJoy", "Teleop record button %i.", pimpl_->record_button);
   ROS_INFO_NAMED("ScaraJoy", "Teleop playback button %i.", pimpl_->playback_button);
   ROS_INFO_NAMED("ScaraJoy", "Teleop enable button %i.", pimpl_->enable_button);
+  ROS_INFO_NAMED("ScaraJoy", "Teleop z button %f.", pimpl_->z_button);
 
   for (std::map<std::string, int>::iterator it = pimpl_->axis_x_cartesian_map.begin();
       it != pimpl_->axis_x_cartesian_map.end(); ++it)
@@ -123,6 +126,7 @@ void ScaraJoy::Impl::sendCmdMsg(const sensor_msgs::Joy::ConstPtr& joy_msg,
   cmd_msg.record = joy_msg->buttons[record_button];
   cmd_msg.playback = joy_msg->buttons[playback_button];
   cmd_msg.enable = joy_msg->buttons[enable_button];
+  cmd_msg.z = joy_msg->axes[z_button];
 
   cmd_pub.publish(cmd_msg);
   sent_disable_msg = false;
