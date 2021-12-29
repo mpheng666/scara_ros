@@ -15,7 +15,6 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_ros_perception
   moveit_ros_planning_interface
   pluginlib
-  moveit_ros_planning_interface 
   moveit_ros_move_group
   moveit_visual_tools
   rviz_visual_tools

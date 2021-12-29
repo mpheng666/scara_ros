@@ -7,8 +7,8 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, ROS_NODE);
 
-    scara_ns::ScaraPlanner scara_planner();
-    scara_planner.startProcess();
+    scara_ns::ScaraPlanner scara_planner_node();
+    // scara_planner_node.startProcess();
 
     ros::spin();
     return 0;
