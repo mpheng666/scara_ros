@@ -24,46 +24,42 @@
 #include <geometry_msgs/Point.h>
 #include <scara_planner/TrajectoryJoints.h>
 
-namespace scara_ns
+class ScaraPlanner
 {
-    class ScaraPlanner
-    {
-    public:
-        ScaraPlanner();
-        ~ScaraPlanner();
-        void startProcess();
+public:
+    ScaraPlanner();
+    ~ScaraPlanner();
+    void startProcess();
 
-    private:
+private:
 
-        ros::NodeHandle private_nh_;
-        ros::NodeHandle relative_nh_;
+    ros::NodeHandle _nh;
+    // ros::AsyncSpinner spinner(1);
+    // spinner.start();
+    const double LOOP_RATE = 10.0f;
 
-        ros::Publisher traj_list_pub_;
-        ros::Publisher traj_goal_pub_;
-        ros::Publisher current_pose_pub_;
-        ros::Subscriber current_joint_sub_;
+    ros::Publisher traj_list_pub_;
+    ros::Publisher traj_goal_pub_;
+    ros::Publisher current_pose_pub_;
+    ros::Subscriber current_joint_sub_;
 
-        geometry_msgs::Point currentPose_;
-        geometry_msgs::Point previousPose_;
+    geometry_msgs::Point currentPose_;
+    geometry_msgs::Point previousPose_;
 
-        scara_planner::TrajectoryJoints currentJoint_;
-        scara_planner::TrajectoryJoints prevJoint_;
+    scara_planner::TrajectoryJoints currentJoint_;
+    scara_planner::TrajectoryJoints prevJoint_;
 
-        geometry_msgs::Point prevGoal_;
-        geometry_msgs::Point currentGoal_;
-        const double LOOP_RATE = 10;
-        
-        void joints_callback(const scara_planner::TrajectoryJoints &msg);
-        void startMoveGroupInterface();
-        void loadParam();
-        void getCurrentJoint();
-        void getCurrentPose();
-        void getInverseKinematics();
-        void getForwardKinematics();
-        std::vector<float> getTraj(std::vector<float>& A, std::vector<float>& B);
+    geometry_msgs::Point prevGoal_;
+    geometry_msgs::Point currentGoal_;
 
-    };
-
-}; //scara_ns
+    void joints_callback(const scara_planner::TrajectoryJoints &msg);
+    void startMoveGroupInterface();
+    void loadParam();
+    void getCurrentJoint();
+    void getCurrentPose();
+    void getInverseKinematics();
+    void getForwardKinematics();
+    std::vector<float> getTraj(std::vector<float> &A, std::vector<float> &B);
+};
 
 #endif

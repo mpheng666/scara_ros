@@ -1,14 +1,12 @@
 #include <ros/ros.h>
 #include "scara_planner.hpp"
 
-const std::string ROS_NODE = "scara_planner_node";
-
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, ROS_NODE);
+    ros::init(argc, argv, "scara_planner_node");
 
-    scara_ns::ScaraPlanner scara_planner_node();
-    // scara_planner_node.startProcess();
+    ScaraPlanner scara_planner_node;
+    scara_planner_node.startProcess();
 
     ros::spin();
     return 0;
