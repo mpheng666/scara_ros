@@ -27,7 +27,7 @@ void ScaraPlanner::startProcess()
 
     while (_nh.ok())
     {
-        ROS_INFO("looping ros");
+        // ROS_INFO("looping ros");
         ros::spinOnce();
         r.sleep();
     }
@@ -39,18 +39,23 @@ void ScaraPlanner::joints_callback(const scara_planner::TrajectoryJoints &msg)
 
 void ScaraPlanner::startMoveGroupInterface()
 {
+    ros::AsyncSpinner spinner(1);
+    spinner.start();
     static const std::string PLANNING_GROUP = "whole_arm";
+
     moveit::planning_interface::MoveGroupInterface move_group(PLANNING_GROUP);
     moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
+
     const robot_state::JointModelGroup *joint_model_group =
-        move_group.getCurrentState()->getJointModelGroup(PLANNING_GROUP);
-    ROS_INFO("start move group planning interface");
+        move_group.getCurrentState(3.0)->getJointModelGroup(PLANNING_GROUP);
+
 
     ROS_INFO_NAMED("Scara", "Planning frame: %s", move_group.getPlanningFrame().c_str());
     ROS_INFO_NAMED("scara", "Available Planning Groups:");
 
     std::copy(move_group.getJointModelGroupNames().begin(), move_group.getJointModelGroupNames().end(),
-              std::ostream_iterator<std::string>(std::cout, ", "));
+              std::ostream_iterator<std::string>(std::cout, "\n"));
+
 
     // std::vector<double> current_joint = move_group.getCurrentJointValues();
     // ROS_INFO("Current joint 1: %f", current_joint[1]);

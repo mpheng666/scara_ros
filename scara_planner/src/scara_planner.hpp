@@ -16,9 +16,10 @@
 
 #include <moveit_msgs/DisplayRobotState.h>
 #include <moveit_msgs/DisplayTrajectory.h>
+
 #include <moveit_visual_tools/moveit_visual_tools.h>
 
-#include <boost/thread.hpp>
+// #include <boost/thread.hpp>
 
 #include <std_msgs/Float32.h>
 #include <geometry_msgs/Point.h>
@@ -30,10 +31,10 @@ public:
     ScaraPlanner();
     ~ScaraPlanner();
     void startProcess();
+    ros::NodeHandle _nh;
 
 private:
 
-    ros::NodeHandle _nh;
     // ros::AsyncSpinner spinner(1);
     // spinner.start();
     const double LOOP_RATE = 10.0f;
