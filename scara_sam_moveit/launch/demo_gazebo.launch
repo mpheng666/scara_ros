@@ -1,5 +1,8 @@
 <launch>
 
+  <!-- specify the planning pipeline -->
+  <arg name="pipeline" default="ompl" />
+  
   <!-- By default, we do not start a database (it can be large) -->
   <arg name="db" default="false" />
   <!-- Allow user to specify database location -->
@@ -10,6 +13,9 @@
 
   <!-- By default, we won't load or override the robot_description -->
   <arg name="load_robot_description" default="false"/>
+
+  <!-- Set execution mode for fake execution controllers -->
+  <arg name="execution_type" default="interpolate" />
 
   <!--
   By default, hide joint_state_publisher's GUI
