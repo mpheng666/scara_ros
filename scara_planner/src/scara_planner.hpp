@@ -24,6 +24,7 @@
 
 #include <std_msgs/Float32.h>
 #include <geometry_msgs/Point.h>
+#include <sensor_msgs/Joy.h>
 #include "scara_planner/TrajectoryJoints.h"
 
 namespace rvt = rviz_visual_tools;
@@ -39,12 +40,26 @@ namespace scara_ns
         ros::NodeHandle nh;
         ros::NodeHandle private_nh_;
 
+        enum class Mode
+        {
+            cartesian_mode,
+            joint_mode,
+            execution_mode
+        };
+
     private:
-        const double LOOP_RATE = 10.0f;
+        const double LOOP_RATE = 20.0f;
+        std::vector<double> joint_group_positions = {0, -0.785, 0, -2.356, 0, 1.571, 0.785, 0.035, 0.035};
+
+        geometry_msgs::Pose target_pose;
+        geometry_msgs::Pose current_pose;
+
+        Mode planner_mode;
         ros::AsyncSpinner spinner;
 
         // Moveit CONSTANT
-        const std::string PLANNING_GROUP = "whole_arm";
+        // const std::string PLANNING_GROUP = "whole_arm";
+        const std::string PLANNING_GROUP = "panda_arm";
 
         // Visualization tools
         moveit_visual_tools::MoveItVisualTools visual_tools;
@@ -55,6 +70,11 @@ namespace scara_ns
         ros::Publisher traj_goal_pub_;
         ros::Publisher current_pose_pub_;
         ros::Subscriber current_joint_sub_;
+        ros::Subscriber joy_sub_;
+
+        bool execution_completion_flag_;
+
+        moveit::planning_interface::MoveGroupInterface::Plan plan;
 
         // ros::ServiceServer PlannerService = private_nh_.advertiseService("Get pose plan:", this->getPosePlan);
 
@@ -70,6 +90,7 @@ namespace scara_ns
         void loadParam();
 
         void joints_callback(const scara_planner::TrajectoryJoints &msg);
+        void joyCb(const sensor_msgs::Joy::ConstPtr &msg);
         const robot_state::JointModelGroup* startMoveGroupInterface();
         void startVisualization();
         void visualizePlan(const geometry_msgs::Pose &, const moveit::planning_interface::MoveGroupInterface::Plan &, const robot_state::JointModelGroup*);
@@ -82,12 +103,13 @@ namespace scara_ns
         void setGoalPosTolerance(const double&);
         void getGoalOrientTolerance();
         void setGoalOrientTolerance(const double&);
+
         void moveGoalTarget();
+        // moveit::planning_interface::MoveItErrorCode ScaraPlanner::executePlan(const moveit::planning_interface::MoveGroupInterface::Plan &plan)
 
         // joint goal
-        void getJointTarget();
-        void getJointPlan();
-        void setJointTarget();
+        void getJointTarget(const robot_state::JointModelGroup *joint_model_group);
+        const moveit::planning_interface::MoveGroupInterface::Plan setJointTarget(const robot_state::JointModelGroup *joint_model_group);
         void moveJointTarget();
 
         void getCurrentJoint();
