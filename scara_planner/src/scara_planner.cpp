@@ -9,6 +9,7 @@ namespace scara_ns
                                    traj_list_pub_(private_nh_.advertise<scara_planner::TrajectoryJoints>("trajectory_joints", 10)),
                                    traj_goal_pub_(private_nh_.advertise<geometry_msgs::Point>("trajectory_goal", 10)),
                                    current_pose_pub_(private_nh_.advertise<geometry_msgs::Point>("current_pose", 10)),
+                                   marker_pub(private_nh_.advertise<visualization_msgs::Marker>("visualization_marker", 1)),
                                    current_joint_sub_(private_nh_.subscribe("current_joints", 20, &ScaraPlanner::joints_callback, this)),
                                    joy_sub_(private_nh_.subscribe<sensor_msgs::Joy>("joy", 100, &ScaraPlanner::joyCb, this)),
                                    execution_completion_flag_(true)
@@ -18,7 +19,6 @@ namespace scara_ns
 
     ScaraPlanner::~ScaraPlanner()
     {
-        ;
     }
 
     void ScaraPlanner::loadParam()
@@ -49,28 +49,78 @@ namespace scara_ns
             spinner.start();
             this->getRobotState();
             // this->getCurrentPose();
+
+            static tf::TransformBroadcaster tf_marker;
+            tf::Transform tf;
+            tf::Quaternion q;
+            tf.setOrigin( tf::Vector3(0.0, 0.0, 0.0) );
+            q.setRPY(0,0,0);
+            tf.setRotation(q);
+            tf_marker.sendTransform(tf::StampedTransform(tf, ros::Time::now(), "world", "target_frame"));
+
+            // visualization_msgs::Marker marker;
+
+            uint32_t shape = visualization_msgs::Marker::CUBE;
+            marker.header.frame_id = "target_frame";
+            marker.header.stamp = ros::Time::now();
+
+            marker.ns = "planning_ns";
+            marker.id = 0;
+            marker.type = shape;
+
+            marker.action = visualization_msgs::Marker::ADD;
+
+            marker.pose.position.x = 0;
+            marker.pose.position.y = 0;
+            marker.pose.position.z = 0;
+            marker.pose.orientation.x = 0.0;
+            marker.pose.orientation.y = 0.0;
+            marker.pose.orientation.z = 0.0;
+            marker.pose.orientation.w = 1.0;
+
+            marker.scale.x = 0.025;
+            marker.scale.y = 0.025;
+            marker.scale.z = 0.025;
+
+            marker.color.r = 0.0f;
+            marker.color.g = 1.0f;
+            marker.color.b = 0.0f;
+            marker.color.a = 1.0;
+
+            marker.lifetime = ros::Duration();
+
+            marker_pub.publish(marker);
+
             switch (planner_mode)
             {
                 case Mode::cartesian_mode:
                 {
-                    ROS_INFO("Planner is cartesian mode");
+                    // ROS_INFO("Planner is cartesian mode");
                     current_pose = this->getCurrentPose();
                     // auto target = this->getPoseTarget();
                     this->setPoseTarget(target_pose);
-                    this->plan = this->getPosePlan();
-                    this->visualizePlan(target_pose, plan, jmg);
+                    
+                    if(planning_flag)
+                    {
+                        this->plan = this->getPosePlan();
+                        this->visualizePlan(target_pose, plan, jmg);
+                        if(execution_completion_flag_)
+                        {
+                            planning_flag = false;
+                        }
+                    }
                     break;
                 }
                 case Mode::joint_mode:
                 {
-                    ROS_INFO("Planner is joint mode");
+                    // ROS_INFO("Planner is joint mode");
                     this->getJointTarget(jmg);
                     this->plan = this->setJointTarget(jmg);
                     break;
                 }
                 case Mode::execution_mode:
                 {
-                    ROS_INFO("Planner is execution mode");
+                    // ROS_INFO("Planner is execution mode");
                     move_group.move();
                     break;
                 }
@@ -92,13 +142,38 @@ namespace scara_ns
         if (msg->buttons[0] == 1)
         {
             planner_mode = Mode::cartesian_mode;
-            target_pose.position.x = (msg->axes[0]*0.25 + current_pose.position.x);
-            target_pose.position.y = (msg->axes[1]*0.25 + current_pose.position.y);
-            target_pose.position.z = (msg->axes[2]*0.25 + current_pose.position.z);
+            ROS_INFO("Planner is cartesian mode");
         }
         else if (msg->buttons[1] == 1)
         {
             planner_mode = Mode::joint_mode;
+            ROS_INFO("Planner is joint mode");
+        }
+        else if (msg->buttons[2] == 1)
+        {
+            planner_mode = Mode::execution_mode;
+            ROS_INFO("Planner is execution mode");
+        }
+
+        if (planner_mode == Mode::cartesian_mode)
+        {
+            target_pose.position.x = (msg->axes[0]*0.25 + current_pose.position.x);
+            target_pose.position.y = (msg->axes[1]*0.25 + current_pose.position.y);
+            target_pose.position.z = (msg->axes[2]*0.25 + current_pose.position.z);
+            marker.header.stamp = ros::Time::now();
+            marker.pose.position.x = msg->axes[0]*0.25 + current_pose.position.x;
+            marker.pose.position.y = msg->axes[1]*0.25 + current_pose.position.y;
+            marker.pose.position.z = msg->axes[2]*0.25 + current_pose.position.z;
+
+            marker_pub.publish(marker);
+            if (msg->axes[5] == 1)
+            {
+                planning_flag = true;
+            }
+
+        }
+        else if (planner_mode == Mode::joint_mode)
+        {
             joint_group_positions[0] = msg->axes[1];
             joint_group_positions[1] = msg->axes[3];
             // joint_group_positions[2] = msg->axes[2];
@@ -106,12 +181,13 @@ namespace scara_ns
             // joy_joints(1) = msg->axes[1];
             // joy_joints(2) = msg->axes[2];
             // joy_joints(3) = msg->axes[3];
-        }
-        else if (msg->buttons[2] == 1)
-        {
-            planner_mode = Mode::execution_mode;
 
         }
+        else if (planner_mode == Mode::execution_mode)
+        {
+
+        }
+
     }
 
     const robot_state::JointModelGroup* ScaraPlanner::startMoveGroupInterface()
@@ -238,7 +314,7 @@ namespace scara_ns
     void ScaraPlanner::setPoseTarget(const geometry_msgs::Pose &target_pose)
     {
         move_group.setPoseTarget(target_pose);
-        ROS_INFO("Pose goal target is set");
+        // ROS_INFO("Pose goal target is set");
         // ROS_INFO("Set target pos x: %f", target_pose.position.x);
         // ROS_INFO("Set target pos y: %f", target_pose.position.y);
         // ROS_INFO("Set target pos z: %f", target_pose.position.z);
@@ -275,8 +351,8 @@ namespace scara_ns
     moveit::planning_interface::MoveGroupInterface::Plan ScaraPlanner::getPosePlan()
     {
         moveit::planning_interface::MoveGroupInterface::Plan plan;
-        bool success = (move_group.plan(plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-        ROS_INFO("Visualizing plan 1 (pose goal) %s", success ? "" : "FAILED");
+        execution_completion_flag_ = (move_group.plan(plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+        ROS_INFO("Visualizing plan 1 (pose goal) %s", execution_completion_flag_ ? "" : "FAILED");
 
         return plan;
     }

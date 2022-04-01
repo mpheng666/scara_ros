@@ -26,6 +26,8 @@
 #include <geometry_msgs/Point.h>
 #include <sensor_msgs/Joy.h>
 #include "scara_planner/TrajectoryJoints.h"
+#include "tf/transform_broadcaster.h"
+#include "visualization_msgs/Marker.h"
 
 namespace rvt = rviz_visual_tools;
 
@@ -69,6 +71,7 @@ namespace scara_ns
         ros::Publisher traj_list_pub_;
         ros::Publisher traj_goal_pub_;
         ros::Publisher current_pose_pub_;
+        ros::Publisher marker_pub;
         ros::Subscriber current_joint_sub_;
         ros::Subscriber joy_sub_;
 
@@ -86,6 +89,10 @@ namespace scara_ns
 
         geometry_msgs::Point prevGoal_;
         geometry_msgs::Point currentGoal_;
+
+        bool planning_flag = true;
+
+        visualization_msgs::Marker marker;
 
         void loadParam();
 
