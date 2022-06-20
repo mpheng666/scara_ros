@@ -35,7 +35,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://scara_sam/meshes/link_0.STL" />
+          filename="package://scara_sam_urdf/meshes/link_0.STL" />
       </geometry>
       <material
         name="">
@@ -49,7 +49,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://scara_sam/meshes/link_0.STL" />
+          filename="package://scara_sam_urdf/meshes/link_0.STL" />
       </geometry>
     </collision>
   </link>
@@ -88,7 +88,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://scara_sam/meshes/link_1.STL" />
+          filename="package://scara_sam_urdf/meshes/link_1.STL" />
       </geometry>
       <material
         name="">
@@ -102,7 +102,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://scara_sam/meshes/link_1.STL" />
+          filename="package://scara_sam_urdf/meshes/link_1.STL" />
       </geometry>
     </collision>
   </link>
@@ -150,7 +150,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://scara_sam/meshes/link_2.STL" />
+          filename="package://scara_sam_urdf/meshes/link_2.STL" />
       </geometry>
       <material
         name="">
@@ -164,7 +164,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://scara_sam/meshes/link_2.STL" />
+          filename="package://scara_sam_urdf/meshes/link_2.STL" />
       </geometry>
     </collision>
   </link>
@@ -211,7 +211,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://scara_sam/meshes/link_3.STL" />
+          filename="package://scara_sam_urdf/meshes/link_3.STL" />
       </geometry>
       <material
         name="">
@@ -225,7 +225,7 @@
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://scara_sam/meshes/link_3.STL" />
+          filename="package://scara_sam_urdf/meshes/link_3.STL" />
       </geometry>
     </collision>
   </link>
@@ -246,5 +246,58 @@
       upper="0.025"
       effort="1"
       velocity="0.1" />
+  </joint>
+<link
+    name="link_4">
+    <inertial>
+      <origin
+        xyz="0 -2.13445690039565E-17 -0.0150798872568919"
+        rpy="0 0 0" />
+      <mass
+        value="0.113662822206879" />
+      <inertia
+        ixx="0.00029291760888769"
+        ixy="9.43978515045515E-22"
+        ixz="1.12516646700694E-20"
+        iyy="0.00029291760888769"
+        iyz="9.79685357039085E-21"
+        izz="1.4396159839516E-05" />
+    </inertial>
+    <!-- <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://scara_sam_urdf/meshes/link_3.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
+      </material>
+    </visual> -->
+    <!-- <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://scara_sam_urdf_urdf/meshes/link_3.STL" />
+      </geometry>
+    </collision> -->
+  </link>
+  <joint
+    name="joint_4"
+    type="continuous">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="link_3" />
+    <child
+      link="link_4" />
+    <axis
+      xyz="0 0 1" />
   </joint>
 </robot>

@@ -31,7 +31,7 @@
   <arg name="gazebo_gui" default="true"/>
   <arg name="paused" default="false"/>
   <!-- By default, use the urdf location provided from the package -->
-  <arg name="urdf_path" default="$(find scara_sam)/urdf/scara_sam.urdf"/>
+  <arg name="urdf_path" default="$(find scara_sam_urdf)/urdf/scara_sam.urdf"/>
 
   <!-- launch the gazebo simulator and spawn the robot -->
   <include file="$(find scara_sam_moveit)/launch/gazebo.launch" >

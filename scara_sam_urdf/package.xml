@@ -1,5 +1,5 @@
 <package format="2">
-  <name>scara_sam</name>
+  <name>scara_sam_urdf</name>
   <version>1.0.0</version>
   <description>
     <p>URDF Description package for scara_sam</p>

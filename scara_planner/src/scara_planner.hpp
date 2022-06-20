@@ -60,8 +60,8 @@ namespace scara_ns
         ros::AsyncSpinner spinner;
 
         // Moveit CONSTANT
-        // const std::string PLANNING_GROUP = "whole_arm";
-        const std::string PLANNING_GROUP = "panda_arm";
+        const std::string PLANNING_GROUP = "whole_arm";
+        // const std::string PLANNING_GROUP = "panda_arm";
 
         // Visualization tools
         moveit_visual_tools::MoveItVisualTools visual_tools;
