@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>scara_kinematics</name>
+  <version>0.0.0</version>
+  <description>The scara_kinematics package</description>
+
+  <maintainer email="mpheng@gmail.com">mpheng</maintainer>
+
+  <license>>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <build_depend>roscpp</build_depend>
+  <build_export_depend>roscpp</build_export_depend>
+  <exec_depend>roscpp</exec_depend>
+  
+  <build_depend>message_generation</build_depend>
+  <exec_depend>message_runtime</exec_depend>
+
+  <export>
+
+  </export>
+</package>

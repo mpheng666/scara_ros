@@ -1,0 +1,6 @@
+geometry_msgs/PoseStamped end_effector_pose
+---
+Header header
+string[] joint_name
+float64[] joint_position
+bool success

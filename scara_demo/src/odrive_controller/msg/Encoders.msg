@@ -1,9 +1,0 @@
-std_msgs/Int32 leftShadowCount
-std_msgs/Int32 leftCprCount
-std_msgs/Float32 leftPosEstimate
-std_msgs/Float32 leftVelEstimate
-std_msgs/Int32 rightShadowCount
-std_msgs/Int32 rightCprCount
-std_msgs/Float32 rightPosEstimate
-std_msgs/Float32 rightVelEstimate
-
