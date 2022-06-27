@@ -6,25 +6,31 @@ add_compile_options(-std=c++17)
 find_package(catkin REQUIRED
     COMPONENTS
     roscpp
+    message_generation
     # std_srvs
-    # geometry_msgs
+    geometry_msgs
 )
 
-# add_service_files(
-#     FILES
-#     ScaraIk.srv
-#     ScaraFk.srv
-# )
+if (CATKIN_ENABLE_TESTING)
+  find_package(roslaunch REQUIRED)
+  roslaunch_add_file_check(launch)
+endif()
 
-# generate_messages(
-#     DEPENDENCIES
-#     std_msgs
-#     geometry_msgs
-# )
+add_service_files(
+    FILES
+    ScaraIk.srv
+    ScaraFk.srv
+)
 
+generate_messages(
+    DEPENDENCIES
+    std_msgs
+    geometry_msgs
+)
 
 catkin_package(
-    CATKIN_DEPENDS roscpp
+    CATKIN_DEPENDS
+    roscpp
 )
 
 include_directories(
@@ -41,11 +47,18 @@ target_link_libraries(scara_kinematics
 add_dependencies(scara_kinematics ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 add_executable(scara_kinematics_node
-  src/scara_kinematics_node.cpp
+  src/scara_kinematics_server_node.cpp
 )
 add_dependencies(scara_kinematics_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(scara_kinematics_node scara_kinematics)
-set_target_properties(scara_kinematics_node PROPERTIES OUTPUT_NAME scara_kinematics)
+set_target_properties(scara_kinematics_node PROPERTIES OUTPUT_NAME scara_kinematics_node)
+
+add_executable(scara_kinematics_client_node
+  src/scara_kinematics_client_node.cpp
+)
+add_dependencies(scara_kinematics_client_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(scara_kinematics_client_node scara_kinematics)
+set_target_properties(scara_kinematics_client_node PROPERTIES OUTPUT_NAME scara_kinematics_client_node)
 
 install(
     TARGETS

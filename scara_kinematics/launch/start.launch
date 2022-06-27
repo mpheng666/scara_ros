@@ -1,0 +1,7 @@
+<launch>
+  <node name="scara_kinematics_node" pkg="scara_kinematics" type="scara_kinematics_node" output="screen"/>
+  <rosparam command="load" file="$(find scara_kinematics)/config/kinematics.yaml"/>
+
+  <!-- <node name="scara_kinematics_client_node" pkg="scara_kinematics" type="scara_kinematics_client_node" output="screen"/> -->
+
+</launch>
