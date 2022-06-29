@@ -7,8 +7,9 @@ find_package(catkin REQUIRED
     COMPONENTS
     roscpp
     message_generation
-    # std_srvs
     geometry_msgs
+    visualization_msgs
+    scara_visualization
 )
 
 if (CATKIN_ENABLE_TESTING)
@@ -31,6 +32,7 @@ generate_messages(
 catkin_package(
     CATKIN_DEPENDS
     roscpp
+    scara_visualization
 )
 
 include_directories(

@@ -29,23 +29,36 @@ void ScaraKinematics::loadParams()
     }
 }
 
-bool ScaraKinematics::forwardKinematics(const std::vector<double>& joints, geometry_msgs::PoseStamped& target_pose)
+bool ScaraKinematics::forwardKinematics(const std::vector<double>& target_joints, geometry_msgs::PoseStamped& pose)
 {
-    target_pose.header.frame_id = "end_effector_frame";
-    target_pose.header.stamp = ros::Time::now();
-    target_pose.pose.position.x = (-link_1_length_*sin(joints.at(0))) + (-link_2_length_*sin(joints.at(0)+joints.at(1)));
-    target_pose.pose.position.y = (link_1_length_*cos(joints.at(0))) + (link_2_length_*cos(joints.at(0)+joints.at(1)));
-    target_pose.pose.position.z = link_0_height_ - joints.at(2);
-    ROS_INFO("Target_pose_frame: %s", target_pose.header.frame_id.c_str());
-    ROS_INFO("Target_pose_x: %f", target_pose.pose.position.x);
-    ROS_INFO("Target_pose_y: %f", target_pose.pose.position.y);
-    ROS_INFO("Target_pose_z: %f", target_pose.pose.position.z);
+    pose.header.frame_id = "end_effector_frame";
+    pose.header.stamp = ros::Time::now();
+    pose.pose.position.x = (-link_1_length_*sin(target_joints.at(0))) + (-link_2_length_*sin(target_joints.at(0)+target_joints.at(1)));
+    pose.pose.position.y = (link_1_length_*cos(target_joints.at(0))) + (link_2_length_*cos(target_joints.at(0)+target_joints.at(1)));
+    pose.pose.position.z = link_0_height_ - target_joints.at(2);
+    ROS_INFO("Result pose_frame: %s", pose.header.frame_id.c_str());
+    ROS_INFO("Result pose_x: %f", pose.pose.position.x);
+    ROS_INFO("Result pose_y: %f", pose.pose.position.y);
+    ROS_INFO("Result pose_z: %f", pose.pose.position.z);
     return true;
 }
 
-bool ScaraKinematics::inverseKinematics(const geometry_msgs::PoseStamped &pose, std::vector<double>& target_joints)
+bool ScaraKinematics::inverseKinematics(const geometry_msgs::PoseStamped &target_pose, std::vector<double>& joints)
 {
+    double theta_zx = atan(target_pose.pose.position.z/target_pose.pose.position.x);
+    double resultant_length = sqrt(target_pose.pose.position.z*target_pose.pose.position.z + target_pose.pose.position.x*target_pose.pose.position.x);
+    double theta = acos((-resultant_length*resultant_length + link_1_length_*link_1_length_ + link_2_length_*link_2_length_)/(2*link_1_length_*link_2_length_));
+    double alpha = (M_1_PI-theta)/2;
 
+    joints.at(0) = theta_zx - alpha;
+    joints.at(1) = M_1_PI-theta;
+    joints.at(2) = target_pose.pose.position.z + link_0_height_;
+
+    ROS_INFO("Target pose_frame: %s", target_pose.header.frame_id.c_str());
+    for(int i=0; i<joints.size(); ++i)
+    {
+        ROS_INFO("Result joint %d: %f", i, joints.at(i));
+    }
     ROS_INFO("inverse kinematics");
     return true;
 }
@@ -57,17 +70,41 @@ bool ScaraKinematics::fkServiceCb(scara_kinematics::ScaraFk::Request& request, s
     {
         ROS_INFO("%s: %f", request.joint_name.at(i).c_str(), request.joint_position.at(i));
     }
-    geometry_msgs::PoseStamped target_pose;
-    bool success = this->forwardKinematics(request.joint_position, target_pose);
-    response.end_effector_pose = target_pose;
-    ROS_INFO("success: %i", success);
+    geometry_msgs::PoseStamped pose;
+    bool success = this->forwardKinematics(request.joint_position, pose);
+    response.end_effector_pose = pose;
+    if(success)
+    {
+        ROS_INFO("Forward kinematics calculation completed");
+    }
+    else
+    {
+        ROS_INFO("Forward kinematics calculation failed");
+    }
     return success;
 }
 
 bool ScaraKinematics::ikServiceCb(scara_kinematics::ScaraIk::Request& request, scara_kinematics::ScaraIk::Response& response)
 {
-    ROS_INFO("Service ik called!");
-    // this->inverseKinematics();
+    ROS_INFO("Request scara inverse kinematics with pose:");
+    ROS_INFO("Target pose_frame: %s", request.end_effector_pose.header.frame_id.c_str());
+    ROS_INFO("Target pose_x: %f", request.end_effector_pose.pose.position.x);
+    ROS_INFO("Target pose_y: %f", request.end_effector_pose.pose.position.y);
+    ROS_INFO("Target pose_z: %f", request.end_effector_pose.pose.position.z);
+
+    std::vector<double> joints;
+    joints.resize(3);
+
+    bool success = this->inverseKinematics(request.end_effector_pose, joints);
+    
+    if(success)
+    {
+        ROS_INFO("Inverse kinematics calculation completed");
+    }
+    else
+    {
+        ROS_INFO("Inverse kinematics calculation failed");
+    }
     return true;
 }
 
